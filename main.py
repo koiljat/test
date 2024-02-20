@@ -2,11 +2,15 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import csv
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def append_to_csv(data, filename, headers, first_page):
     df = pd.DataFrame(data)
     if first_page:  # If it's the first page, write headers
         df.to_csv(filename, mode='w', index=False, header=headers)
+        logging.info("CSV headers written.")
     else:  # Otherwise, append without headers
         df.to_csv(filename, mode='a', index=False, header=False)
 
@@ -46,7 +50,7 @@ if __name__ == '__main__':
     csv_file = "data.csv"
     headers = ['Company Name', 'Role', 'Commitment Period', 'Location', 'Job Type', 'Date Posted', 'Website']
 
-    print("Starting CSV file creation.")
+    logging.info("Starting CSV file creation.")
 
     with requests.Session() as session:
         for page in range(1, 121):
@@ -54,17 +58,17 @@ if __name__ == '__main__':
             response = session.get(url)
             
             if response.status_code != 200:
-                print(f"Failed to retrieve page {page}. Status code: {response.status_code}")
+                logging.error(f"Failed to retrieve page {page}. Status code: {response.status_code}")
                 continue
             
             soup = BeautifulSoup(response.content, "html.parser")
             data = extract_data(soup)
             
             if not data:
-                print(f"No data found on page {page}. Stopping.")
+                logging.info(f"No data found on page {page}. Stopping.")
                 break
 
             append_to_csv(data, csv_file, headers, page == 1)
-            print(f"Data appended to CSV for page {page}.")
+            logging.info(f"Data appended to CSV for page {page}.")
 
-    print("CSV file creation completed successfully.")
+    logging.info("CSV file creation completed successfully.")
